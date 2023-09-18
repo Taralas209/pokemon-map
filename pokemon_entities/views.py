@@ -100,7 +100,7 @@ def show_pokemon(request, pokemon_id):
             'img_url': pokemon.previous_evolution.photo.url
         }
 
-    next_evolution = Pokemon.objects.filter(previous_evolution=pokemon).first()
+    next_evolution = pokemon.next_evolutions.first()
     if next_evolution:
         pokemon_data['next_evolution'] = {
             'pokemon_id': next_evolution.id,
