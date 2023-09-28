@@ -37,31 +37,20 @@ def show_all_pokemons(request):
 
     folium_map = folium.Map(location=MOSCOW_CENTER, zoom_start=12)
 
-    pokemons = Pokemon.objects.all().prefetch_related(
-        Prefetch(
-            'entities',
-            queryset=PokemonEntity.objects.filter(
-                appeared_at__lte=current_time,
-                disappeared_at__gte=current_time
-            ),
-            to_attr='current_entities'
-        )
-    )
-
-    for pokemon in pokemons:
-        for pokemon_entity in pokemon.current_entities:
-            add_pokemon(
-                folium_map, pokemon_entity.lat,
-                pokemon_entity.lon,
-                pokemon.photo.path
-            )
+    pokemon_entities = PokemonEntity.objects.filter(
+        appeared_at__lte=current_time,
+        disappeared_at__gte=current_time
+    ).select_related('pokemon')
 
     pokemons_on_page = []
-    for pokemon in pokemons:
+
+    for entity in pokemon_entities:
+        add_pokemon(folium_map, entity.lat, entity.lon, entity.pokemon.photo.path)
+
         pokemons_on_page.append({
-            'pokemon_id': pokemon.id,
-            'img_url': pokemon.photo.url,
-            'title_ru': pokemon.title,
+            'pokemon_id': entity.pokemon.id,
+            'img_url': entity.pokemon.photo.url,
+            'title_ru': entity.pokemon.title,
         })
 
     return render(request, 'mainpage.html', context={
